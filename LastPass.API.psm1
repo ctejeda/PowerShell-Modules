@@ -18,7 +18,7 @@ param(
 
 
 
-[switch]$QueryReporting
+[switch]$QueryReporting,
 [switch]$QueryUserData,
 [switch]$QuerySFData
 
