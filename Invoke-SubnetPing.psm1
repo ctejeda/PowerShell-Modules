@@ -54,3 +54,6 @@ Write-Host "Your results where saved in the following directory $path"
  }
 
   }
+
+ ## Use Case Example 
+ ## Invoke-SubnetPing -StartingIP 192.168.1.1 -EndingIP 192.168.1.100
