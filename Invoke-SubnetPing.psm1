@@ -31,7 +31,7 @@ $network = ($IPByte[0]+"."+$IPByte[1]+"."+$IPByte[2])
 
 $startrange..$endrange | % { $IP = $network +"."+ $_ ;$reply = Test-Connection -ComputerName "$IP" -Count 1 -Quiet
 
- if ($reply -eq 'True' ) {Write-Host "Reply from $IP"; $array += [pscustomobject] @{"IP" = $IP; "Status" = "Active"}} else {Write-Host "No Reply from $IP"; $array += [pscustomobject] @{"IP" = $IP; "Status" = "No Reply"}} } 
+ if ($reply -eq 'True' ) {Write-Host "Reply from $IP" -ForegroundColor Green; $array += [pscustomobject] @{"IP" = $IP; "Status" = "Active"}} else {Write-Host "No Reply from $IP"-ForegroundColor Red ; $array += [pscustomobject] @{"IP" = $IP; "Status" = "No Reply"}} } 
 
  
  $array 
