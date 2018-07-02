@@ -3,11 +3,11 @@
 ## 7/2/2018
 ## Ping a range of IP's in a subnet. 
 
+[void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing") 
+[void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms") 
 
 Function Invoke-SubnetPing {
 
-[void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing") 
-[void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms") 
 param(
 
 [cmdletbinding()]
