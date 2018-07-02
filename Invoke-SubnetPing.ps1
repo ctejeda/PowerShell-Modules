@@ -1,3 +1,9 @@
+## Invoke-Subnet Ping
+## By: Chris Tejeda
+## 7/2/2018
+## Ping a range of IP's in a subnet. 
+
+
 Function Invoke-SubnetPing {
 
 
@@ -41,7 +47,7 @@ $array | Export-Csv -Path $path -NoTypeInformation
 Write-Host "Your results where saved in the following directory $path"
 }
 
- N {Write-Host "No, Do not Save results"}
+ N {Write-Host "Results not Saved"}
  Default {$array | Export-Csv -Path "c:\temp\Ping_Scan_for_Subnet_$network.csv" -NoTypeInformation }
 
  }
