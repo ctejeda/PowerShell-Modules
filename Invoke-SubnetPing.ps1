@@ -1,4 +1,4 @@
-﻿Function Invoke-SubnetPing {
+Function Invoke-SubnetPing {
 
 
 param(
@@ -26,8 +26,7 @@ $startrange..$endrange | % { $IP = $network +"."+ $_ ;$reply = Test-Connection -
 
  if ($reply -eq 'True' ) {Write-Host "Reply from $IP"; $array += [pscustomobject] @{"IP" = $IP; "Status" = "Active"}} else {Write-Host "No Reply from $IP"; $array += [pscustomobject] @{"IP" = $IP; "Status" = "No Reply"}} } 
 
- $path = $SaveChooser.FileName+"."
-
+ 
  $array 
  Write-Host "Would you like to save the results?" -ForegroundColor Yellow 
 
@@ -39,13 +38,12 @@ $startrange..$endrange | % { $IP = $network +"."+ $_ ;$reply = Test-Connection -
 $SaveChooser.ShowDialog()
 $path = $SaveChooser.FileName+".csv"
 $array | Export-Csv -Path $path -NoTypeInformation
-
+Write-Host "Your results where saved in the following directory $path"
 }
+
  N {Write-Host "No, Do not Save results"}
- Default {Export-Csv -Path "c:\temp\Ping_Scan_for_Subnet_$network.csv"}
+ Default {$array | Export-Csv -Path "c:\temp\Ping_Scan_for_Subnet_$network.csv" -NoTypeInformation }
 
  }
 
-
-
- }
+  }
