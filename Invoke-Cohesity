@@ -1,0 +1,167 @@
+### Cohesity Powershell Module
+### By Chris Tejeda 
+### Date 8/20/2018
+
+
+function Ignore-SSLCertificates
+{
+    $Provider = New-Object Microsoft.CSharp.CSharpCodeProvider
+    $Compiler = $Provider.CreateCompiler()
+    $Params = New-Object System.CodeDom.Compiler.CompilerParameters
+    $Params.GenerateExecutable = $false
+    $Params.GenerateInMemory = $true
+    $Params.IncludeDebugInformation = $false
+    $Params.ReferencedAssemblies.Add("System.DLL") > $null
+    $TASource=@'
+        namespace Local.ToolkitExtensions.Net.CertificatePolicy
+        {
+            public class TrustAll : System.Net.ICertificatePolicy
+            {
+                public bool CheckValidationResult(System.Net.ServicePoint sp,System.Security.Cryptography.X509Certificates.X509Certificate cert, System.Net.WebRequest req, int problem)
+                {
+                    return true;
+                }
+            }
+        }
+'@ 
+    $TAResults=$Provider.CompileAssemblyFromSource($Params,$TASource)
+    $TAAssembly=$TAResults.CompiledAssembly
+    ## We create an instance of TrustAll and attach it to the ServicePointManager
+    $TrustAll = $TAAssembly.CreateInstance("Local.ToolkitExtensions.Net.CertificatePolicy.TrustAll")
+    [System.Net.ServicePointManager]::CertificatePolicy = $TrustAll
+    [Net.ServicePointManager]::SecurityProtocol = "Tls12, Tls11, Tls, Ssl3"
+}
+
+
+Function Invoke-Cohesity {
+
+
+[CmdletBinding()]
+    param 
+    (
+        [Parameter(Mandatory=$True)]
+        [string]$User,
+        [Parameter(Mandatory=$True)]
+        [string]$Password,
+        [Parameter(Mandatory=$false)]
+        [switch]$GETProtectionJob,  
+        [Parameter(Mandatory=$false)]
+        [Switch]$AddVMToJOB,
+        [Parameter(Mandatory=$false)]
+        [string]$NODE,
+        [Parameter(Mandatory=$false)]
+        [string]$Location,
+        [Parameter(Mandatory=$false)]
+        [switch]$GETCohesityVMs
+   
+)
+
+
+Ignore-SSLCertificates
+
+## Generate Token
+$GenerateToken= @" 
+
+
+{
+  "domain": "Your Domain",
+  "password": "$Password",
+  "username": "$user"
+}
+
+
+
+
+"@
+
+
+
+If ($Location -eq "SUN")
+{
+
+
+$CohesityRefreshVMListURI = "https://Yourserver/irisservices/api/v1/public/protectionSources/refresh/141"
+## Cohesity Yourserver VMs
+$CohesityVMURI = "https://Yourserver/irisservices/api/v1/public/protectionSources/virtualMachines"
+## Cohesity Yourserver Protection Job URI - Notice the Unique ID at the end of the URI
+$JOBUPDATEURI = "https://Yourserver/irisservices/api/v1/public/protectionJobs/11759"
+## Cohesity Yourserver Protection Job URI - Notice the Unique ID at the end of the URI
+$JOBGETURI = "https://Yourserver/irisservices/api/v1/public/protectionJobs/11759"
+## Cohesity Yourserver Token URI
+$TokenURI = "https://Yourserver/irisservices/api/v1/public/accessTokens"
+#Generate Token and save it to a variable
+$Token = Invoke-RestMethod -Uri $TokenURI -Body $GenerateToken -UseBasicParsing -Method POST -ContentType "application/Json" | select -ExpandProperty accesstoken
+$authorization = "$Token"
+$headers = @{ Authorization = "Bearer $authorization" } 
+
+}
+
+
+elseif ($Location -eq "LIC")
+{
+
+$CohesityRefreshVMListURI = "https://Yourserver/irisservices/api/v1/public/protectionSources/refresh/1"
+## Cohesity Yourserver VMs
+$CohesityVMURI = "https://Yourserver/irisservices/api/v1/public/protectionSources/virtualMachines"
+## Cohesity Yourserver Protection Job URI - Notice the Unique ID at the end of the URI
+$JOBUPDATEURI = "https://Yourserver/irisservices/api/v1/public/protectionJobs/16"
+## Cohesity Yourserver Protection Job URI - Notice the Unique ID at the end of the URI
+$JOBGETURI = "https://Yourserver/irisservices/api/v1/public/protectionJobs/16"
+## Cohesity Yourserver Token URI
+$TokenURI = "https://Yourserver/irisservices/api/v1/public/accessTokens"
+#Generate Token and save it to a variable
+$Token = Invoke-RestMethod -Uri $TokenURI -Body $GenerateToken -UseBasicParsing -Method POST -ContentType "application/Json" | select -ExpandProperty accesstoken
+$authorization = "$Token"
+$headers = @{ Authorization = "Bearer $authorization" } 
+
+
+
+}
+
+
+
+
+if ($GETProtectionJob) {Invoke-RestMethod -Uri $JOBGETURI -Headers $headers -UseBasicParsing -Method GET -ContentType "application/Json"}
+
+if ($GETCohesityVMs) 
+
+{
+Invoke-RestMethod -Uri $CohesityRefreshVMListURI -Headers $headers -Method POST -Verbose
+Invoke-RestMethod -Uri $CohesityVMURI -Headers $headers -UseBasicParsing -Method GET -ContentType "application/Json" 
+}
+
+if ($AddVMToJOB) 
+
+{
+Invoke-RestMethod -Uri $CohesityRefreshVMListURI -Headers $headers -Method POST -Verbose
+$CohesityVMs = Invoke-RestMethod -Uri $CohesityVMURI -Headers $headers -UseBasicParsing -Method GET -ContentType "application/Json" 
+$CohesityVMID = $CohesityVMs | ? {$_.name -eq "$NODE"} | select -ExpandProperty id
+if ($CohesityVMID -ne $null) {
+Write-Host "Cohesity VM $NODE ID = $CohesityVMID" -ForegroundColor Red
+$ProtectionJobCurrentState = Invoke-Cohesity -GETProtectionJob -User $User -Password "$Password" 
+$ProtectionJobCurrentState | % {$_.sourceIds = $_.sourceIds + $CohesityVMID} 
+$ProtectionJobNewState = $ProtectionJobCurrentState | ConvertTo-Json -Depth 50 | % { [System.Text.RegularExpressions.Regex]::Unescape($_) }
+}
+else {Write-Host "Unable to Find $NODE in Cohesity, Check VM Name and try agian";break}
+
+## Update Protection JOb
+$UpdateJob= @"
+$ProtectionJobNewState
+"@ 
+
+
+
+
+## Send API PUT (Update) Request
+Invoke-RestMethod -Uri $JOBUPDATEURI -Headers $headers -Body $UpdateJob -UseBasicParsing -Method PUT -ContentType "application/Json" 
+
+
+
+}
+
+
+
+
+
+
+}
