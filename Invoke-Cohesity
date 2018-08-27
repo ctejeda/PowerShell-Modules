@@ -1,7 +1,7 @@
 ### Cohesity Powershell Module
 ### By Chris Tejeda 
 ### Date 8/20/2018
-
+### A Powershell Module what interacts with Cohesity API
 
 function Ignore-SSLCertificates
 {
