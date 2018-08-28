@@ -1,0 +1,80 @@
+## Run Remote CMD 
+## Chris Tejeda 
+
+
+Function Invoke-RemoteCommand {
+
+
+
+[CmdletBinding()]
+    param 
+    (
+        [Parameter(Mandatory=$True)]
+        [string]$computer,
+        [Parameter(Mandatory=$false)]
+        [string]$Command,
+        [Parameter(Mandatory=$false)]
+        [Switch]$Powershell,
+        [Parameter(Mandatory=$false)]
+        [Switch]$CMD
+       
+
+        )
+
+$logdate = Get-Date -UFormat "%m.%d.%Y-%H.%M.%S"
+#$timeout = new-timespan -Minutes 3
+#$sw = [diagnostics.stopwatch]::StartNew()
+
+
+
+if ($CMD)
+{
+$Extendcommand = @"
+cmd.exe /c "$Command >> c:\RemoteCMD_$logdate.log
+"@
+
+Invoke-WmiMethod -Path win32_process -Name create -ArgumentList ($Extendcommand) -ComputerName $computer -InformationAction SilentlyContinue -ErrorAction SilentlyContinue
+
+
+do {
+Write-Host "Command sent to remote computer $computer, Waiting for logfile"
+sleep 5
+}
+until (Get-Content -Path "\\$computer\c$\RemoteCMD_$logdate.log" -ErrorAction SilentlyContinue ) 
+Get-Content -Path "\\$computer\c$\RemoteCMD_$logdate.log"
+}
+
+elseif ($Powershell) 
+{
+
+
+
+$Extendcommand = @"
+cmd.exe /c "powershell.exe -NonInteractive -ExecutionPolicy ByPass -command "$Command" >> c:\RemotePS_$logdate.log
+
+"@
+
+Invoke-WmiMethod -Path win32_process -Name create -ArgumentList ($Extendcommand) -ComputerName $computer -InformationAction SilentlyContinue -ErrorAction SilentlyContinue
+
+
+do {
+Write-Host "Command sent to remote computer $computer, Waiting for logfile"
+sleep 5
+}
+until (Get-Content -Path "\\$computer\c$\RemotePS_$logdate.log" -ErrorAction SilentlyContinue ) 
+Get-Content -Path "\\$computer\c$\RemotePS_$logdate.log"
+
+
+}
+
+else {Write-Host "Please choose the CMD or POWERSHELL switch when calling Invoke-RemoteCommand. 
+
+example:  
+Invoke-RemoteCommand -computer computername -Command Get-Date -Powershell 
+or 
+Invoke-RemoteCommand -computer computername -Command GPUPDATE -CMD " -ForegroundColor Red}
+
+
+
+
+}
