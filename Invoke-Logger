@@ -1,0 +1,31 @@
+Function Invoke-Logger {
+
+
+    [CmdletBinding()]
+    param 
+    (
+        [Parameter(Mandatory=$true)]
+        [string]$Message,
+        [Parameter(Mandatory=$true)]
+        [string]$LogFile,
+        [Parameter(Mandatory=$false)]
+        [Switch]$ShowOutput,
+        [Parameter(Mandatory=$false)]
+        [Switch]$SaveToCSV,
+        [Parameter(Mandatory=$false)]
+        [Switch]$ShowError,
+        [Parameter(Mandatory=$false)]
+        [Switch]$ShowWarning
+    )
+        $date = Get-Date -UFormat "%m/%d/%Y %H:%M:%S"
+        Add-Content $LogFile -Value "$date - $Message"
+        if ($ShowOutput)
+        {$ShowOutput = Write-Host $Message -ForegroundColor Green }
+        if ($ShowError)
+        {$ShowError = Write-Host $Message -ForegroundColor Red }
+        if ($ShowWarning)
+        {$ShowWarning = Write-Host $Message -ForegroundColor Yellow }
+        if ($SaveToCSV){$array = @(); $array += [pscustomobject] @{"computer" = $computer; "Message" = "$Message"; "Date" = "$date" }; $array | Export-Csv -Path "$env:USERPROFILE\Invoke-VMBuild.csv" -NoTypeInformation }
+        $ErrorActionPreference='stop'
+        
+}
