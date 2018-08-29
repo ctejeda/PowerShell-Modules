@@ -1,3 +1,9 @@
+## Invoke Logger 
+## By Chris Tejeda
+## A custom loggin function 
+## Example Command: Invoke-logger -Message "Obtaning Computer Details" -Logfile "c:\temp\test.log" -Showoutput
+
+
 Function Invoke-Logger {
 
 
