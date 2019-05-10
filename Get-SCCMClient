@@ -1,0 +1,80 @@
+
+Function Get-SCCMClient 
+
+
+
+{
+
+
+[CmdletBinding()]
+    param 
+    (
+        
+        [Parameter(Mandatory=$false)]
+        [switch]$Name,
+        [Parameter(Mandatory=$false)]
+        [string]$IP,
+        [Parameter(Mandatory=$false)]
+        [string]$Mac
+          
+    )
+
+
+
+    $namespace = "root\SMS\site_LIC"
+    $siteServer = "SCCM Server"
+    $MAC = $MAC.Replace(" ","")
+    $MAC = $MAC.replace("-",":")
+    $PWD = pwd
+    ## Import SCCM Module
+    Import-Module "\Microsoft Configuration Manager\AdminConsole\bin\ConfigurationManager.psd1"
+    
+    ## Change Directory to your site code
+    cd SC: -ErrorAction SilentlyContinue
+
+    if ($mac) {
+
+  
+
+    
+    if ($MAC -notlike "*:*")
+    {
+        $count = 0
+        while ($count -lt ($MAC.Length - 2))
+        {
+            $inputMac = $MAC.Insert(($count)+2,':')
+            $count += 3
+        }
+        $MAC
+    }
+    Get-WmiObject -Namespace $namespace -ComputerName $siteServer -class SMS_R_System -filter "MACAddresses like '%$MAC%'"
+ }
+    elseif ($ip) {
+    
+    
+   Get-WmiObject -Namespace $namespace -ComputerName $siteServer -class SMS_R_System -filter "IPAddresses like '%$IP%'"
+    
+    
+    
+    
+    }
+    elseif ($Name){
+    
+    
+    Get-WmiObject -Namespace $namespace -ComputerName $siteServer -class SMS_R_System -filter "NetbiosName like '%$Name%'"
+    
+    }
+ }
+
+
+
+
+ 
+ 
+ 
+
+
+ 
+
+
+ 
