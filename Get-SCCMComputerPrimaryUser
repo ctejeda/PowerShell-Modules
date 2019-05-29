@@ -1,0 +1,27 @@
+## Name: Get-SCCMComputerPrimaryUser 
+## Purpose: Retrives the Primary user for computer via SCCM 
+## Example: Get-SCCMComputerPrimaryUser -Computer DC01.domain.local
+## By: Chris Tejeda
+## Date: 5.29.2019
+## GitHub Profile: https://github.com/ctejeda
+
+
+
+
+Function Get-SCCMComputerPrimaryUser {
+
+[CmdletBinding()]
+    param 
+    (
+        [Parameter(Mandatory=$false)]
+        [string]$Computer
+ 
+          
+    )
+
+
+    $namespace = "root\SMS\site_SIteCodeHEre"
+    $siteServer = "SCCM-Server-Here"
+    Get-WmiObject -Namespace "root\SMS\Site_lic" -Class SMS_UserMachineRelationship  -ComputerName $siteServer -Filter "ResourceName like '%$Computer%'" | select ResourceName, UniqueUserName
+
+}
