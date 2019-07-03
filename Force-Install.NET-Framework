@@ -1,0 +1,24 @@
+
+Function Force-Install.NET-Framework {
+
+## Export WindowsUpdate Reg File 
+reg export HKLM\Software\Policies\Microsoft\Windows\WindowsUpdate c:/WindowsUpdateRegFile.reg
+
+
+## Change Location to Regisrty  
+Set-Location "HKLM:"
+
+## remove the WindowUpdate Reg key 
+Remove-Item -Path Software\Policies\Microsoft\Windows\WindowsUpdate -Recurse
+
+## Stop and Start the WU service
+Stop-Service -Name wuauserv
+Start-Service -Name wuauserv
+
+## Install .NET Framework 
+DISM /Online /Enable-Feature /FeatureName:NetFx3 /All
+
+## Import the registry key back into the registry
+Reg import c:/WindowsUpdateRegFile.reg
+
+}
