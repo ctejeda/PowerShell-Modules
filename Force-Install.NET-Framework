@@ -1,3 +1,10 @@
+## Name: Force-Install.NET-Framework
+## Purpose: Installs .NET-Framework by bypassing Windows update via the registry
+## By: Chris Tejeda
+## Date: 7.3.2019
+## Example Command Force-Install.NET-Framework
+## GitHub Profile: https://github.com/ctejeda
+
 
 Function Force-Install.NET-Framework {
 
